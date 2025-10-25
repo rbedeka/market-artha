@@ -1,0 +1,54 @@
+services:
+  db:
+    image: timescale/timescaledb:latest-pg14
+    container_name: market-artha-db-dev
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: market_artha_dev
+    ports:
+      - "5433:5432"
+    volumes:
+      - db_data_dev:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./apps/backend
+      dockerfile: backend.dev.Dockerfile
+    working_dir: /app/apps/backend
+    command: sh -c "corepack enable pnpm && pnpm install && pnpx prisma migrate deploy --schema=prisma/schema.prisma && pnpx prisma generate --schema=prisma/schema.prisma && pnpm start:dev"
+    container_name: market-artha-backend-dev
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@db:5432/market_artha_dev
+      JWT_ACCESS_SECRET: devsecretkey
+      PORT: 3001
+    ports:
+      - "3001:3001"
+    depends_on:
+      - db
+    volumes:
+      - ./:/app:delegated
+      - /app/node_modules
+    restart: unless-stopped
+
+  frontend:
+    image: node:24-slim
+    working_dir: /app
+    command: sh -c "corepack enable pnpm && pnpm install && pnpm --filter ./apps/frontend... dev"
+    container_name: market-artha-frontend-dev
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3001
+      NODE_ENV: development
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    volumes:
+      - ./:/app:delegated
+      - /app/node_modules
+    restart: unless-stopped
+
+volumes:
+  db_data_dev:

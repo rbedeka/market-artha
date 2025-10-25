@@ -1,0 +1,15 @@
+packages:
+  - apps/*
+  - packages/*
+
+onlyBuiltDependencies:
+  - "@prisma/client"
+  - "@prisma/engines"
+  - prisma
+  # Allow install/build scripts for dependencies that require native builds
+  - "@nestjs/core"
+  - bcrypt
+  - sharp
+  - unrs-resolver
+# Optional: fail installs if a new dependency with scripts appears and isn't approved above.
+strictDepBuilds: true

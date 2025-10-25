@@ -1,0 +1,27 @@
+{
+  "name": "market-artha",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "pnpm --parallel -r dev",
+    "build": "pnpm -r build",
+    "docker:build": "docker compose build",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:dev": "docker compose -f docker-compose.dev.yml up --build -d",
+    "prisma:migrate": "pnpm --filter backend prisma migrate dev",
+    "prisma:studio": "pnpm --filter backend prisma studio"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.18.2",
+  "dependencies": {
+    "effect": "^3.18.4"
+  }
+}
