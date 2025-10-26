@@ -17,11 +17,12 @@ services:
       context: ./apps/backend
       dockerfile: backend.dev.Dockerfile
     working_dir: /app/apps/backend
-    command: sh -c "corepack enable pnpm && pnpm install && pnpx prisma migrate deploy --schema=prisma/schema.prisma && pnpx prisma generate --schema=prisma/schema.prisma && pnpm start:dev"
+    command: sh -c "corepack enable pnpm && pnpm --filter backend --filter shared install && pnpx prisma migrate deploy --schema=prisma/schema.prisma && pnpx prisma generate --schema=prisma/schema.prisma && pnpm start:dev"
     container_name: market-artha-backend-dev
     environment:
+      FRONTEND_URL: http://localhost:3000
       DATABASE_URL: postgres://postgres:postgres@db:5432/market_artha_dev
-      JWT_ACCESS_SECRET: devsecretkey
+      JWT_ACCESS_SECRET: dev_secret_key
       PORT: 3001
     ports:
       - "3001:3001"
@@ -35,7 +36,7 @@ services:
   frontend:
     image: node:24-slim
     working_dir: /app
-    command: sh -c "corepack enable pnpm && pnpm install && pnpm --filter ./apps/frontend... dev"
+    command: sh -c "corepack enable pnpm && pnpm --filter frontend --filter shared install && pnpm --filter frontend dev"
     container_name: market-artha-frontend-dev
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:3001

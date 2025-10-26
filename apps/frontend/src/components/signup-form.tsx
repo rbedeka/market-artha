@@ -1,0 +1,144 @@
+"use client";
+
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Field,
+  FieldDescription,
+  FieldGroup,
+  FieldSeparator,
+} from "@/components/ui/field";
+import Image from "next/image";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { InputField, PasswordField } from "./ui/input-fields";
+import { SignupFormValues, signupSchema } from "@/utils/register.validation";
+import { SocialLoginGroups } from "./ui/social-logins";
+import Link from "next/link";
+import { Console, Effect } from "effect";
+import { HttpError, ParseError } from "@/utils/errors";
+import { toast } from "sonner";
+
+export function SignupForm({
+  className,
+  ...props
+}: React.ComponentProps<"div">) {
+  const form = useForm<SignupFormValues>({
+    mode: "onChange",
+    reValidateMode: "onChange",
+    resolver: zodResolver(signupSchema),
+  });
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isValid },
+  } = form;
+
+  const submitForm = async (data: SignupFormValues) =>
+    Effect.tryPromise({
+      try: () =>
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        }),
+      catch: (err) =>
+        new HttpError({
+          message: "An error occurred. Please try again." + err,
+          status: 500,
+        }),
+    }).pipe(
+      Effect.andThen((res) =>
+        Effect.if(res.ok, {
+          onTrue: () => {
+            toast.success("Registration successful! Please log in.");
+            return Effect.tryPromise({
+              try: () => res.json(),
+              catch: (err) =>
+                new ParseError({
+                  message: "Failed to parse response." + err,
+                  status: 500,
+                }),
+            });
+          },
+          onFalse: () => Effect.sync(() => toast.error("Response not ok")),
+        })
+      ),
+      Effect.tap(() => Console.log(process.env.NEXT_PUBLIC_API_URL)),
+      Effect.runPromise
+    );
+
+  return (
+    <div className={cn("flex flex-col gap-6", className)} {...props}>
+      <Card className="overflow-hidden p-0">
+        <CardContent className="grid p-0 md:grid-cols-2">
+          <form className="p-6 md:p-8" onSubmit={handleSubmit(submitForm)}>
+            <FieldGroup className="gap-2">
+              <div className="flex flex-col items-center gap-2 text-center">
+                <h1 className="text-2xl font-bold py-4">Create your account</h1>
+              </div>
+
+              <InputField
+                label="Username"
+                id="username"
+                register={register}
+                error={errors.username?.message}
+              />
+              <InputField
+                label="Email"
+                id="email"
+                type="email"
+                register={register}
+                error={errors.email?.message}
+              />
+
+              <PasswordField
+                label="Password"
+                id="password"
+                register={register}
+                error={errors.password?.message}
+              />
+              <PasswordField
+                label="Confirm Password"
+                id="confirmPassword"
+                register={register}
+                error={errors.confirmPassword?.message}
+              />
+              <Field>
+                <Button type="submit" disabled={!isValid} className="w-full">
+                  Create Account
+                </Button>
+              </Field>
+              <div className="h-2" />
+
+              <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">
+                Or continue with
+              </FieldSeparator>
+              <div className="h-2" />
+
+              <SocialLoginGroups />
+              <FieldDescription className="text-center">
+                Already have an account? <Link href="/login">Sign in</Link>
+              </FieldDescription>
+            </FieldGroup>
+          </form>
+          <div className="bg-muted relative hidden md:block">
+            <Image
+              src="/login-page.jpg"
+              loading="eager"
+              width={500}
+              height={500}
+              alt="Image"
+              className="absolute inset-0 h-full w-full object-cover dark:grayscale-50"
+            />
+          </div>
+        </CardContent>
+      </Card>
+      <FieldDescription className="px-6 text-center">
+        By clicking continue, you agree to our <a href="#">Terms of Service</a>{" "}
+        and <a href="#">Privacy Policy</a>.
+      </FieldDescription>
+    </div>
+  );
+}
