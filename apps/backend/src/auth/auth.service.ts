@@ -60,7 +60,7 @@ export class AuthService {
           onFalse: () => Effect.succeed(undefined),
           onTrue: () =>
             Effect.log('Captcha is required for this login attempt').pipe(
-              Effect.tap(
+              Effect.flatMap(() =>
                 Effect.fail(
                   new UnauthorizedError({
                     message:
@@ -97,7 +97,7 @@ export class AuthService {
             Effect.promise(() =>
               this.loginAttemptService.recordFailedAttempt(cacheIdentifier),
             ).pipe(
-              Effect.tap(() =>
+              Effect.flatMap(() =>
                 Effect.fail(
                   new UnauthorizedError({
                     message: 'Invalid email or user credentials',

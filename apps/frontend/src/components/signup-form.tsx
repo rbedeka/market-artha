@@ -23,6 +23,7 @@ export function SignupForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const router = useRouter();
   const form = useForm<SignupFormValues>({
     mode: "onBlur", // Changed to onBlur for real-time async validation
     reValidateMode: "onBlur",
@@ -34,7 +35,7 @@ export function SignupForm({
     formState: { errors, isValid },
   } = form;
 
-  const submitForm = submitRegisterForm(useRouter());
+  const submitForm = submitRegisterForm(router);
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>

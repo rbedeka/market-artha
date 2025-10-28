@@ -5,7 +5,7 @@ import type { Cache } from 'cache-manager';
 @Injectable()
 export class LoginAttemptService {
   private readonly MAX_ATTEMPTS = 3;
-  private readonly BLOCK_TIME_MS = 300000; // 5 minutes in milliseconds (300 seconds)
+  private readonly BLOCK_TIME_MS = 300000; // 300,000 milliseconds = 300 seconds = 5 minutes
 
   constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache) {}
 

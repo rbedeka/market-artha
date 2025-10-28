@@ -5,7 +5,7 @@ export class HttpError extends Data.TaggedError("HttpError")<{
   status?: number;
 }> {}
 
-export class ParseError extends Data.TaggedError("HttpError")<{
+export class ParseError extends Data.TaggedError("ParseError")<{
   message: string;
   status?: number;
 }> {}

@@ -19,14 +19,18 @@ services:
   redis:
     image: redis:7.0-alpine
     container_name: redis-prod
-    command:
-      [
+    command: [
         "redis-server",
         "--requirepass",
         "${REDIS_PASSWORD}",
         "--save",
-        "20",
+        # Standard production save intervals: after 1 change in 900s, 10 in 300s, or 10000 in 60s
+        "900",
         "1",
+        "300",
+        "10",
+        "60",
+        "10000",
         "--loglevel",
         "warning",
       ]
