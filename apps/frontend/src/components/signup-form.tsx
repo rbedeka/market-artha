@@ -13,20 +13,19 @@ import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { InputField, PasswordField } from "./ui/input-fields";
-import { SignupFormValues, signupSchema } from "@/utils/register.validation";
+import { SignupFormValues, signupSchema } from "@/lib/register.validation";
 import { SocialLoginGroups } from "./ui/social-logins";
 import Link from "next/link";
-import { Console, Effect } from "effect";
-import { HttpError, ParseError } from "@/utils/errors";
-import { toast } from "sonner";
+import { submitRegisterForm } from "@/lib/submitRegisterForm";
+import { useRouter } from "next/navigation";
 
 export function SignupForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
   const form = useForm<SignupFormValues>({
-    mode: "onChange",
-    reValidateMode: "onChange",
+    mode: "onBlur", // Changed to onBlur for real-time async validation
+    reValidateMode: "onBlur",
     resolver: zodResolver(signupSchema),
   });
   const {
@@ -35,39 +34,7 @@ export function SignupForm({
     formState: { errors, isValid },
   } = form;
 
-  const submitForm = async (data: SignupFormValues) =>
-    Effect.tryPromise({
-      try: () =>
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
-        }),
-      catch: (err) =>
-        new HttpError({
-          message: "An error occurred. Please try again." + err,
-          status: 500,
-        }),
-    }).pipe(
-      Effect.andThen((res) =>
-        Effect.if(res.ok, {
-          onTrue: () => {
-            toast.success("Registration successful! Please log in.");
-            return Effect.tryPromise({
-              try: () => res.json(),
-              catch: (err) =>
-                new ParseError({
-                  message: "Failed to parse response." + err,
-                  status: 500,
-                }),
-            });
-          },
-          onFalse: () => Effect.sync(() => toast.error("Response not ok")),
-        })
-      ),
-      Effect.tap(() => Console.log(process.env.NEXT_PUBLIC_API_URL)),
-      Effect.runPromise
-    );
+  const submitForm = submitRegisterForm(useRouter());
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
@@ -92,6 +59,23 @@ export function SignupForm({
                 register={register}
                 error={errors.email?.message}
               />
+              {errors.email?.type === "custom" && (
+                <div className="-mt-4 py-2">
+                  <Link
+                    href="/login"
+                    className="text-sm text-blue-500 underline"
+                  >
+                    Log in
+                  </Link>{" "}
+                  or{" "}
+                  <Link
+                    href="/forgot-password"
+                    className="text-sm text-blue-500 underline"
+                  >
+                    Reset password
+                  </Link>
+                </div>
+              )}
 
               <PasswordField
                 label="Password"

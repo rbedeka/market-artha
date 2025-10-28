@@ -11,14 +11,16 @@ import {
 } from "@/components/ui/field";
 import Image from "next/image";
 import { SocialLoginGroups } from "./ui/social-logins";
-import { LoginFormValues, loginSchema } from "@/utils/login.validation";
+import { LoginFormValues, loginSchema } from "@/lib/login.validation";
 import { zodResolver } from "@hookform/resolvers/zod/dist/zod.js";
 import { useForm } from "react-hook-form";
 import { InputField, PasswordField } from "./ui/input-fields";
 import Link from "next/link";
-import { Console, Effect } from "effect";
-import { HttpError, ParseError } from "@/utils/errors";
-import { toast } from "sonner";
+import TurnstileWidget from "./ui/captcha-turnstile";
+import { useState } from "react";
+import { submitLoginForm } from "@/lib/submitLoginForm";
+import { useTurnstile } from "react-turnstile";
+import { useRouter } from "next/navigation";
 
 export function LoginForm({
   className,
@@ -35,39 +37,17 @@ export function LoginForm({
     formState: { errors, isValid },
   } = form;
 
-  const submitForm = async (data: LoginFormValues) =>
-    Effect.tryPromise({
-      try: () =>
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
-        }),
-      catch: (err) =>
-        new HttpError({
-          message: "An error occurred. Please try again." + err,
-          status: 500,
-        }),
-    }).pipe(
-      Effect.andThen((res) =>
-        Effect.if(res.ok, {
-          onTrue: () => {
-            toast.success("Login successful!");
-            return Effect.tryPromise({
-              try: () => res.json(),
-              catch: (err) =>
-                new ParseError({
-                  message: "Failed to parse response." + err,
-                  status: 500,
-                }),
-            });
-          },
-          onFalse: () => Effect.sync(() => toast.error("Invalid Credentials")),
-        })
-      ),
-      Effect.tap(() => Console.log(process.env.NEXT_PUBLIC_API_URL)),
-      Effect.runPromise
-    );
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const turnstile = useTurnstile();
+  const router = useRouter();
+
+  const submitForm = submitLoginForm(
+    captchaToken!,
+    setCaptchaToken,
+    turnstile,
+    router
+  );
+
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card className="overflow-hidden p-0">
@@ -95,13 +75,14 @@ export function LoginForm({
               />
               <Link
                 href="#"
-                className="ml-auto text-sm underline-offset-2 hover:underline -mt-5"
+                className="ml-auto text-sm underline-offset-2 hover:underline -mt-8"
               >
                 Forgot your password?
               </Link>
 
+              <TurnstileWidget onVerify={setCaptchaToken} />
               <Field>
-                <Button type="submit" disabled={!isValid}>
+                <Button type="submit" disabled={!isValid || !captchaToken}>
                   Login
                 </Button>
               </Field>

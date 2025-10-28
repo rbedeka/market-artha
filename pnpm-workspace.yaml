@@ -11,5 +11,6 @@ onlyBuiltDependencies:
   - bcrypt
   - sharp
   - unrs-resolver
+  - "@apollo/protobufjs"
 # Optional: fail installs if a new dependency with scripts appears and isn't approved above.
 strictDepBuilds: true

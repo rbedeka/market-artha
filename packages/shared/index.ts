@@ -17,6 +17,7 @@ export const LoginDtoSchema = Schema.Struct({
     Schema.String
   ),
   password: Schema.NonEmptyString,
+  captchaToken: Schema.optional(Schema.NonEmptyString),
 });
 
 export type LoginDto = Schema.Schema.Type<typeof LoginDtoSchema>;
