@@ -8,20 +8,42 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+
+enum Role {
+  admin
+  sub_admin
+  user
+}
+
+enum SubscriptionPlan {
+  basic
+  pro
+}
+
 model User {
   id           Int       @id @default(autoincrement())
   email        String    @unique
   username     String    @unique
-  name         String?
+  role         Role     @default(user)
+  subscription Subscription? 
   password     String
   refreshToken String?   @db.Text
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
+  verifyEmail  Boolean   @default(false)
   
   journals     Journal[]
   algorithms   Algorithm[]
 }
 
+model Subscription {
+  id        String   @id @default(uuid())
+  plan      SubscriptionPlan @default(basic)
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int    @unique
+  startedAt DateTime @default(now())
+  expiresAt DateTime
+}
 model Journal {
   id        Int      @id @default(autoincrement())
   title     String

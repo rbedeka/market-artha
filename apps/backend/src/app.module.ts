@@ -1,18 +1,29 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService, PingService } from './app.service';
-import { PrismaModule } from './prisma/prisma.module';
-import { AuthModule } from './auth/auth.module';
-import { UsersModule } from './users/users.module';
+// import { ConfigModule } from '@nestjs/config';
 import { CacheModule } from '@nestjs/cache-manager';
-import { LoginAttemptService } from './auth/login-attempt.service';
 import { TurnstileModule } from 'nest-cloudflare-turnstile';
 import { Request } from 'express';
 import KeyvRedis from '@keyv/redis';
 import { CacheableMemory } from 'cacheable';
 import { Keyv } from 'keyv';
+// import { parseBackendEnv } from '@market-artha/shared';
+
+import { AppController } from './app.controller';
+import { AppService, PingService } from './app.service';
+import { PrismaModule } from './prisma/prisma.module';
+import { AuthModule } from './auth/auth.module';
+import { UsersModule } from './users/users.module';
 @Module({
   imports: [
+    // ConfigModule.forRoot({
+    //   validate: (env) => {
+    //     console.log(env);
+    //     return parseBackendEnv(env);
+    //   },
+    //   // Zod validation on load
+    //   isGlobal: true,
+    //   envFilePath: '../../.env', // Load from root .env
+    // }),
     PrismaModule,
     AuthModule,
     UsersModule,
@@ -23,7 +34,7 @@ import { Keyv } from 'keyv';
         const redisPort = process.env.REDIS_PORT || '6379';
         const redisUrl = `redis://${redisHost}:${redisPort}`;
         const redisStore = new KeyvRedis(redisUrl);
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+
         const altStore = new Keyv({
           store: new CacheableMemory({
             ttl: 60000,
@@ -48,6 +59,6 @@ import { Keyv } from 'keyv';
     }),
   ],
   controllers: [AppController],
-  providers: [AppService, PingService, LoginAttemptService],
+  providers: [AppService, PingService],
 })
 export class AppModule {}

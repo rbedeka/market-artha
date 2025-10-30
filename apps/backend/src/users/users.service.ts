@@ -27,10 +27,23 @@ export class UsersService {
       data: {
         email: data.email,
         password: hashedPassword,
-        name: data.email.split('@')[0],
         username: data.username,
       },
     });
     return user;
+  }
+
+  async setRefreshTokenHash(userId: number, refreshToken: string) {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { refreshToken },
+    });
+  }
+
+  async removeRefreshToken(userId: number) {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { refreshToken: null },
+    });
   }
 }

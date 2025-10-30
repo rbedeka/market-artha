@@ -21,6 +21,9 @@ import { useState } from "react";
 import { submitLoginForm } from "@/lib/submitLoginForm";
 import { useTurnstile } from "react-turnstile";
 import { useRouter } from "next/navigation";
+import { useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { HttpError, ParseError } from "@/lib/errors";
 
 export function LoginForm({
   className,
@@ -41,12 +44,25 @@ export function LoginForm({
   const turnstile = useTurnstile();
   const router = useRouter();
 
-  const submitForm = submitLoginForm(
-    captchaToken!,
-    setCaptchaToken,
-    turnstile,
-    router
-  );
+  const loginMutation = useMutation({
+    mutationFn: (data: { email: string; password: string }) =>
+      submitLoginForm(captchaToken!, data),
+    onSuccess: (data) => {
+      turnstile.reset();
+      setCaptchaToken(null);
+
+      if (data.status === "ok") {
+        toast.success("Logged in!");
+        router.push("/dashboard");
+      }
+      toast.error(data.message || "Login failed.");
+    },
+    onError: (error: HttpError | ParseError) => {
+      toast.error(error.message);
+    },
+  });
+
+  const submitForm = (data: LoginFormValues) => loginMutation.mutate(data);
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>

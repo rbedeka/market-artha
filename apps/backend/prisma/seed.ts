@@ -21,31 +21,31 @@ async function main() {
       {
         email: 'alice@example.com',
         username: 'alice',
-        name: 'Alice Johnson',
+        role: 'admin',
         password: hashedPassword,
       },
       {
         email: 'bob@example.com',
         username: 'bob',
-        name: 'Bob Smith',
+        role: 'user',
         password: hashedPassword,
       },
       {
         email: 'charlie@example.com',
         username: 'charlie',
-        name: 'Charlie Brown',
+        role: 'user',
         password: hashedPassword,
       },
       {
         email: 'diana@example.com',
         username: 'diana',
-        name: 'Diana Prince',
+        role: 'user',
         password: hashedPassword,
       },
       {
         email: 'eve@example.com',
         username: 'eve',
-        name: 'Eve Wilson',
+        role: 'user',
         password: hashedPassword,
       },
     ],
@@ -58,7 +58,7 @@ async function main() {
   console.log(`✓ Total users in database: ${allUsers.length}`);
   console.log('📋 Seeded users:');
   allUsers.forEach((user) => {
-    console.log(`  - ${user.email} (${user.name})`);
+    console.log(`  - ${user.email} (${user.role})`);
   });
 
   console.log('✅ Seed completed successfully!');

@@ -5,5 +5,8 @@
   "types": "./index.ts",
   "exports": {
     ".": "./index.ts"
+  },
+  "dependencies": {
+    "zod": "^4.1.12"
   }
 }

@@ -3,14 +3,15 @@ packages:
   - packages/*
 
 onlyBuiltDependencies:
+  - "@apollo/protobufjs"
+  - "@nestjs/core"
   - "@prisma/client"
   - "@prisma/engines"
-  - prisma
-  # Allow install/build scripts for dependencies that require native builds
-  - "@nestjs/core"
+  - "@scarf/scarf"
   - bcrypt
+  - prisma
   - sharp
   - unrs-resolver
-  - "@apollo/protobufjs"
-# Optional: fail installs if a new dependency with scripts appears and isn't approved above.
+  - "@scarf/scarf"
+
 strictDepBuilds: true

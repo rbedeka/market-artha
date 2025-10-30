@@ -18,6 +18,9 @@ import { SocialLoginGroups } from "./ui/social-logins";
 import Link from "next/link";
 import { submitRegisterForm } from "@/lib/submitRegisterForm";
 import { useRouter } from "next/navigation";
+import { useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { HttpError, ParseError } from "@/lib/errors";
 
 export function SignupForm({
   className,
@@ -35,7 +38,21 @@ export function SignupForm({
     formState: { errors, isValid },
   } = form;
 
-  const submitForm = submitRegisterForm(router);
+  const registerMutation = useMutation({
+    mutationFn: (data: SignupFormValues) => submitRegisterForm(data),
+    onSuccess: (data) => {
+      if (data.status === "ok") {
+        toast.success("Registered successfully!");
+        router.push("/login");
+      }
+      toast.error(data.message || "Registration failed.");
+    },
+    onError: (error: HttpError | ParseError) => {
+      toast.error(error.message);
+    },
+  });
+
+  const submitForm = (data: SignupFormValues) => registerMutation.mutate(data);
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
