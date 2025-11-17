@@ -26,4 +26,7 @@ async function bootstrap() {
   console.log(`Application is running on: ${await app.getUrl()}`);
   console.log(process.env.FRONTEND_URL);
 }
-void bootstrap();
+void bootstrap().catch((err) => {
+  console.error('Error during application bootstrap:', err);
+  process.exit(1);
+});

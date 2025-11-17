@@ -1,5 +1,6 @@
 // src/auth/strategies/jwt.strategy.ts
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { InvalidCredentialsError } from '@market-artha/shared';
+import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Request } from 'express';
 import { Strategy } from 'passport-jwt';
@@ -22,10 +23,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: { sub: number; [key: string]: any }) {
+  async validate(payload: { sub: number; email: string; [key: string]: any }) {
     const user = await this.usersService.findById(payload.sub);
     if (!user) {
-      throw new UnauthorizedException();
+      throw new InvalidCredentialsError({
+        message: 'User not found for JWT payload',
+        attemptedEmail: payload.email,
+        context: { payload },
+      });
     }
     return user;
   }

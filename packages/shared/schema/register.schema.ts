@@ -9,10 +9,11 @@ const emailNotTaken = (email: string) =>
         fetch(`/auth/check-email?email=${encodeURIComponent(email)}`).then(
           (res) => res.json()
         )
-      ).pipe(
-        Effect.catchAll(() => Effect.succeed(true)),
-        Effect.map((data) => !data.exists)
-      ),
+      )
+        .pipe
+        // Effect.catchAll(() => Effect.succeed(true)),
+        // Effect.map((data) => !data.exists)
+        (),
   })(!email).pipe(Effect.runPromise);
 
 export const signupSchema = z

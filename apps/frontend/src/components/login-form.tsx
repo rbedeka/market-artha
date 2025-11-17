@@ -23,7 +23,7 @@ import { useTurnstile } from "react-turnstile";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { HttpError, ParseError } from "@/lib/errors";
+import { HttpError, ParseError } from "@market-artha/shared/error";
 
 export function LoginForm({
   className,
@@ -51,11 +51,14 @@ export function LoginForm({
       turnstile.reset();
       setCaptchaToken(null);
 
+      console.log("Login response data:", data);
+
       if (data.status === "ok") {
         toast.success("Logged in!");
         router.push("/dashboard");
+      } else {
+        toast.error(data.message || "Login failed.");
       }
-      toast.error(data.message || "Login failed.");
     },
     onError: (error: HttpError | ParseError) => {
       toast.error(error.message);

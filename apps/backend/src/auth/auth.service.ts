@@ -1,14 +1,16 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { Console, Effect } from 'effect';
-import {
-  ServiceUnavailableError,
-  UnauthorizedError,
-} from 'src/errors/nestEquivalentErrors.error';
+import { Effect } from 'effect';
 import { LoginAttemptService } from './login-attempt.service';
 import { UsersService } from 'src/users/users.service';
 import * as bcrypt from 'bcrypt';
 import { Request, Response } from 'express';
+import {
+  ExternalServiceError,
+  InvalidCredentialsError,
+  TokenExpiredError,
+  UnauthorizedError,
+} from '@market-artha/shared/error';
 
 @Injectable()
 export class AuthService {
@@ -29,10 +31,17 @@ export class AuthService {
   // Validate user credentials
   async validateUser(email: string, password: string) {
     const user = await this.userService.findByEmail(email);
-    if (!user) throw new UnauthorizedException('User not Found');
-
+    if (!user)
+      throw new InvalidCredentialsError({
+        message: 'User not found',
+        attemptedEmail: email,
+      });
     const passwordValid = await bcrypt.compare(password, user.password);
-    if (!passwordValid) throw new UnauthorizedException('Invalid credentials');
+    if (!passwordValid)
+      throw new InvalidCredentialsError({
+        message: 'Invalid password',
+        attemptedEmail: email,
+      });
     return user;
   }
 
@@ -47,11 +56,11 @@ export class AuthService {
     const captchaRequired = await this.loginAttemptService
       .shouldRequireCaptcha(cacheIdentifier)
       .catch((err) => {
-        throw new ServiceUnavailableError({
+        throw new ExternalServiceError({
           message: `Failed to check captcha requirement: ${JSON.stringify(
             err,
           )}`,
-          serviceName: 'Captcha',
+          serviceName: 'Captcha - Cloudflare Turnstile',
         });
       });
 
@@ -75,12 +84,12 @@ export class AuthService {
           this.loginAttemptService.resetAttempts(cacheIdentifier),
         ),
       ),
-      Effect.catchTag('UnauthorizedError', (err) =>
+      Effect.catchTag('Unauthorized', (err) =>
         Effect.promise(() =>
           this.loginAttemptService.recordFailedAttempt(cacheIdentifier),
         ).pipe(Effect.zipRight(Effect.fail(err))),
       ),
-      Effect.either,
+      // Effect.either,
       Effect.runPromise,
     );
   }
@@ -125,16 +134,36 @@ export class AuthService {
     // const refreshToken = req.cookies['refresh_token'];
     // const userId = req.body.userId;
 
-    if (!refreshToken || !userId) throw new UnauthorizedException();
+    if (!refreshToken || !userId)
+      throw new UnauthorizedError({
+        message: 'Missing refresh token or user ID',
+        context: {
+          refreshToken,
+          userId,
+        },
+      });
 
     const user = await this.userService.findById(userId);
-    if (!user || !user.refreshToken) throw new UnauthorizedException();
+    if (!user || !user.refreshToken)
+      throw new UnauthorizedError({
+        message: 'User not found or refresh token missing',
+        context: {
+          userId,
+        },
+      });
 
     const refreshTokenMatches = await bcrypt.compare(
       refreshToken,
       user.refreshToken,
     );
-    if (!refreshTokenMatches) throw new UnauthorizedException();
+    if (!refreshTokenMatches)
+      throw new TokenExpiredError({
+        message: 'Refresh token does not match',
+        context: {
+          userId,
+        },
+        tokenType: 'refresh',
+      });
 
     // Generate new tokens, update cookies as above
     return this.login({ id: user.id, email: user.email }, res);

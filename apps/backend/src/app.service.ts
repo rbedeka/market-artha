@@ -6,10 +6,3 @@ export class AppService {
     return 'Hello World!';
   }
 }
-
-@Injectable()
-export class PingService {
-  ping(): string {
-    return 'pong';
-  }
-}

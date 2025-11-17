@@ -2,7 +2,7 @@ import { EyeOff, Eye } from "lucide-react";
 import { useState } from "react";
 import { UseFormRegister } from "react-hook-form";
 import { Button } from "./button";
-import { Field, FieldLabel } from "./field";
+import { Field, FieldError, FieldLabel } from "./field";
 import { Input } from "./input";
 
 export function PasswordField({
@@ -67,6 +67,7 @@ export function PasswordField({
       >
         {error ? error : "\u00A0"}
       </span>
+      <FieldError>{error}</FieldError>
     </Field>
   );
 }

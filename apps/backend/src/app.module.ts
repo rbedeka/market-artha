@@ -1,37 +1,30 @@
 import { Module } from '@nestjs/common';
-// import { ConfigModule } from '@nestjs/config';
 import { CacheModule } from '@nestjs/cache-manager';
 import { TurnstileModule } from 'nest-cloudflare-turnstile';
 import { Request } from 'express';
 import KeyvRedis from '@keyv/redis';
 import { CacheableMemory } from 'cacheable';
 import { Keyv } from 'keyv';
-// import { parseBackendEnv } from '@market-artha/shared';
 
 import { AppController } from './app.controller';
-import { AppService, PingService } from './app.service';
+import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
+import { APP_CONFIG, ConfigProviderModule } from './config/config.module';
+import { BackendEnv } from '@market-artha/shared';
+
 @Module({
   imports: [
-    // ConfigModule.forRoot({
-    //   validate: (env) => {
-    //     console.log(env);
-    //     return parseBackendEnv(env);
-    //   },
-    //   // Zod validation on load
-    //   isGlobal: true,
-    //   envFilePath: '../../.env', // Load from root .env
-    // }),
+    ConfigProviderModule,
     PrismaModule,
     AuthModule,
     UsersModule,
     CacheModule.registerAsync({
       isGlobal: true,
-      useFactory: () => {
-        const redisHost = process.env.REDIS_HOST || 'localhost';
-        const redisPort = process.env.REDIS_PORT || '6379';
+      useFactory: (appConfig: BackendEnv) => {
+        const redisHost = appConfig.REDIS_HOST;
+        const redisPort = appConfig.REDIS_PORT;
         const redisUrl = `redis://${redisHost}:${redisPort}`;
         const redisStore = new KeyvRedis(redisUrl);
 
@@ -46,19 +39,26 @@ import { UsersModule } from './users/users.module';
           ttl: 600000, // 10 minutes in milliseconds
         };
       },
+      inject: [APP_CONFIG],
     }),
-    TurnstileModule.forRoot({
-      secretKey: process.env.TURNSTILE_SECRET_KEY!,
-      tokenResponse: (req: Request) => {
-        const body = req.body as Record<string, unknown>;
-        const value = Object.prototype.hasOwnProperty.call(body, 'captchaToken')
-          ? body['captchaToken']
-          : '';
-        return value as string;
-      },
+    TurnstileModule.forRootAsync({
+      inject: [APP_CONFIG],
+      useFactory: (appConfig: BackendEnv) => ({
+        secretKey: appConfig.TURNSTILE_SECRET_KEY,
+        tokenResponse: (req: Request) => {
+          const body = req.body as Record<string, unknown>;
+          const value = Object.prototype.hasOwnProperty.call(
+            body,
+            'captchaToken',
+          )
+            ? body['captchaToken']
+            : '';
+          return value as string;
+        },
+      }),
     }),
   ],
   controllers: [AppController],
-  providers: [AppService, PingService],
+  providers: [AppService],
 })
 export class AppModule {}

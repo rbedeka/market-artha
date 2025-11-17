@@ -1,9 +1,7 @@
-import { Effect, Console } from "effect";
-import { HttpError, ParseError } from "./errors";
-import { LoginFormValues } from "../../../../packages/shared/schema/login.validation";
-// import { Dispatch, SetStateAction } from "react";
-// import { useTurnstile } from "react-turnstile";
-// import { useRouter } from "next/navigation";
+import { Console, Effect } from "effect";
+import { HttpError, ParseError } from "@market-artha/shared/error";
+import { LoginFormValues } from "./login.validation";
+import { env } from "./utils";
 
 export const submitLoginForm = async (
   captchaToken: string,
@@ -11,7 +9,7 @@ export const submitLoginForm = async (
 ) => {
   return Effect.tryPromise({
     try: () =>
-      fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+      fetch(`${env.NEXT_PUBLIC_API_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...data, captchaToken }),
@@ -22,13 +20,23 @@ export const submitLoginForm = async (
       }),
   }).pipe(
     Effect.flatMap((res) =>
+      res.ok
+        ? Effect.succeed(res)
+        : new HttpError({
+            message: `Invalid user or password`,
+          })
+    ),
+    Effect.flatMap((res) =>
       Effect.tryPromise({
         try: () => res.json(),
         catch: () =>
           new ParseError({ message: "Failed to parse response from server." }),
       })
     ),
-    Effect.tap((res) => Console.log("Response from login:", res)),
+    Effect.tap((resData) =>
+      Console.log("Login response data:", JSON.stringify(resData))
+    ),
+
     Effect.runPromise
   );
 };

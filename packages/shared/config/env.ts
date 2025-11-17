@@ -1,5 +1,5 @@
-import { Effect } from "effect/index";
 import { z } from "zod";
+import { ConfigValidationError } from "../error";
 
 // Define environment schema
 const baseEnvSchema = z.object({
@@ -43,24 +43,23 @@ export type FrontendEnv = z.infer<typeof frontendEnvSchema>;
 export const parseBackendEnv = (env: Record<string, any>): BackendEnv => {
   const result = backendEnvSchema.safeParse(env);
   if (!result.success) {
-    throw new Error(`Invalid environment config: ${result.error.message}`);
+    throw new ConfigValidationError({
+      message: result.error.message,
+      issues: result.error.issues,
+      context: { path: z.treeifyError(result.error).properties },
+    });
   }
   return result.data;
 };
 
-export const _parseBackendEnv = (env: Record<string, any>) =>
-  Effect.try({
-    try: () => backendEnvSchema.parse(env),
-    catch: (err) =>
-      new Error(`Invalid backend environment config: ${String(err)}`),
-  });
-
 export const parseFrontendEnv = (env: Record<string, any>): FrontendEnv => {
   const result = frontendEnvSchema.safeParse(env);
   if (!result.success) {
-    throw new Error(
-      `Invalid frontend environment config: ${result.error.message}`
-    );
+    throw new ConfigValidationError({
+      message: result.error.message,
+      issues: result.error.issues,
+      context: { path: z.treeifyError(result.error).properties },
+    });
   }
   return result.data;
 };

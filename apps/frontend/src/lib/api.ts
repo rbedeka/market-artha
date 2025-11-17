@@ -1,5 +1,5 @@
 import { Effect } from "effect";
-import { HttpError } from "./errors";
+import { HttpError } from "@market-artha/shared";
 
 // utils/api.ts
 export async function fetchWithCookies<T>(

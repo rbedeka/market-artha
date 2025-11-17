@@ -11,13 +11,12 @@ import {
 import { AuthService } from './auth.service';
 import type { Request, Response } from 'express';
 import { TurnstileCaptcha } from 'nest-cloudflare-turnstile';
-import { Either } from 'effect';
-import { mapCustomErrorToNestException } from 'src/errors/nestEquivalentErrors.error';
 import { UsersService } from 'src/users/users.service';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { LoginDto } from 'src/dto/login.dto';
 import { RegisterDto } from 'src/dto/register.dto';
+import { HTTP_STATUS } from '@market-artha/shared';
 
 @Controller('auth')
 export class AuthController {
@@ -53,22 +52,23 @@ export class AuthController {
       body.captchaToken || null,
       req.ip || 'unknown',
     );
+    await Promise.resolve(); // Placeholder to avoid unused variable error
 
-    const user = await result.pipe(
-      Either.match({
-        onLeft: (err) => mapCustomErrorToNestException(err),
-        onRight: (user) => this.authService.login(user, res),
-      }),
-    );
+    console.dir(req.user);
+    // console.log(res);
 
-    console.log(user);
-
-    return { status: 'ok', user };
+    return { result, statusCode: HTTP_STATUS.OK };
   }
 
   @Get('check-email')
   async checkEmail(@Query('email') email: string) {
     const exists = !!(await this.userService.findByEmail(email));
+    return { exists };
+  }
+
+  @Get('check-username')
+  async checkUserName(@Query('username') username: string) {
+    const exists = !!(await this.userService.findByUserName(username));
     return { exists };
   }
 

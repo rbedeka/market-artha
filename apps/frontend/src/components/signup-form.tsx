@@ -20,7 +20,6 @@ import { submitRegisterForm } from "@/lib/submitRegisterForm";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { HttpError, ParseError } from "@/lib/errors";
 
 export function SignupForm({
   className,
@@ -41,13 +40,11 @@ export function SignupForm({
   const registerMutation = useMutation({
     mutationFn: (data: SignupFormValues) => submitRegisterForm(data),
     onSuccess: (data) => {
-      if (data.status === "ok") {
-        toast.success("Registered successfully!");
-        router.push("/login");
-      }
-      toast.error(data.message || "Registration failed.");
+      console.log("Register response data:", data);
+      toast.success("Registered successfully!");
+      router.push("/login");
     },
-    onError: (error: HttpError | ParseError) => {
+    onError: (error) => {
       toast.error(error.message);
     },
   });

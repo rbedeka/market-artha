@@ -26,16 +26,11 @@ services:
     build:
       context: ./apps/backend
       dockerfile: backend.dev.Dockerfile
+    env_file:
+      - ./.env
     working_dir: /app/apps/backend
-    command: sh -c "corepack enable pnpm && pnpm --filter backend --filter shared install && pnpx prisma migrate deploy --schema=prisma/schema.prisma && pnpx prisma generate --schema=prisma/schema.prisma && pnpm start:dev"
+    command: sh -c "corepack enable pnpm && pnpm --filter backend --filter shared install && nohup pnpm --filter shared build:watch > /tmp/shared-watch.log 2>&1 & sleep 2 && pnpm exec prisma migrate deploy --schema=prisma/schema.prisma && pnpm exec prisma generate --schema=prisma/schema.prisma && pnpm start:debug"
     container_name: market-artha-backend-dev
-    environment:
-      FRONTEND_URL: http://localhost:3000
-      DATABASE_URL: postgres://postgres:postgres@db:5432/market_artha_dev
-      JWT_ACCESS_SECRET: dev_secret_key
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      PORT: 3001
     ports:
       - "3001:3001"
     depends_on:
@@ -47,6 +42,8 @@ services:
 
   frontend:
     image: node:24-slim
+    env_file:
+      - ./.env
     working_dir: /app
     command: sh -c "corepack enable pnpm && pnpm --filter frontend --filter shared install && pnpm --filter frontend dev"
     container_name: market-artha-frontend-dev

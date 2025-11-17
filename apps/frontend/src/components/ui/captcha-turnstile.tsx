@@ -1,4 +1,5 @@
 // components/TurnstileWidget.tsx
+import { env } from "@/lib/utils";
 import Script from "next/script";
 import Turnstile from "react-turnstile";
 
@@ -9,7 +10,7 @@ type Props = {
 export default function TurnstileWidget({ onVerify }: Props) {
   return (
     <Turnstile
-      sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
+      sitekey={env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
       onVerify={onVerify}
       theme="auto"
       size="flexible"

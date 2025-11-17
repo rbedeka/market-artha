@@ -1,11 +1,12 @@
 import { Effect, Console } from "effect";
-import { HttpError, ParseError } from "@/lib/errors";
+import { HttpError, ParseError } from "@market-artha/shared/error";
 import { SignupFormValues } from "./register.validation";
+import { env } from "./utils";
 
 export const submitRegisterForm = async (data: SignupFormValues) =>
   Effect.tryPromise({
     try: () =>
-      fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, {
+      fetch(`${env.NEXT_PUBLIC_API_URL}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
